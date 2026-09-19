@@ -21,7 +21,10 @@ const demoDevices = [
 async function routerOsGet(path) {
   if (!router.url || !router.user || !router.password) return null;
   const response = await fetch(`${router.url}/rest${path}`, {
-    headers: { authorization: `Basic ${Buffer.from(`${router.user}:${router.password}`).toString('base64')}` },
+    headers: {
+      authorization: `Basic ${Buffer.from(`${router.user}:${router.password}`).toString('base64')}`,
+      accept: 'application/json'
+    },
     signal: AbortSignal.timeout(7000)
   });
   if (!response.ok) throw new Error(`RouterOS returned ${response.status}`);
@@ -29,7 +32,10 @@ async function routerOsGet(path) {
 }
 
 function json(res, status, payload) {
-  res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+  res.writeHead(status, {
+    'content-type': 'application/json; charset=utf-8',
+    'cache-control': 'no-store'
+  });
   res.end(JSON.stringify(payload));
 }
 
@@ -40,14 +46,27 @@ async function body(req) {
 }
 
 async function api(req, res, pathname) {
-  if (pathname === '/api/health') return json(res, 200, { ok: true, mode: router.url ? 'routeros' : 'demo', time: new Date().toISOString() });
-  if (pathname === '/api/devices') return json(res, 200, { data: demoDevices, source: router.url ? 'routeros-ready' : 'demo' });
+  if (pathname === '/api/health') {
+    return json(res, 200, {
+      ok: true,
+      mode: router.url ? 'routeros' : 'demo',
+      time: new Date().toISOString()
+    });
+  }
+
+  if (pathname === '/api/devices') {
+    return json(res, 200, { data: demoDevices, source: router.url ? 'routeros-ready' : 'demo' });
+  }
+
   if (pathname === '/api/routeros/system/resource') {
     try {
       const data = await routerOsGet('/system/resource');
       return json(res, 200, { data: data || { uptime: 'demo', 'cpu-load': '28', version: 'RouterOS 7' }, demo: !data });
-    } catch (error) { return json(res, 502, { error: error.message }); }
+    } catch (error) {
+      return json(res, 502, { error: error.message });
+    }
   }
+
   if (pathname === '/api/ai/analyze' && req.method === 'POST') {
     const { question = '' } = await body(req);
     const answer = question.includes('أمان') || question.toLowerCase().includes('firewall')
@@ -55,21 +74,34 @@ async function api(req, res, pathname) {
       : 'الشبكة مستقرة مبدئيًا. راقب CPU وحركة VLAN خلال الساعات القادمة، ولا تطبق تغييرات تلقائية قبل مراجعتها.';
     return json(res, 200, { answer, confidence: 0.91, generatedAt: new Date().toISOString() });
   }
+
   return json(res, 404, { error: 'API route not found' });
 }
 
-const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.webmanifest': 'application/manifest+json' };
+const mime = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.webmanifest': 'application/manifest+json; charset=utf-8'
+};
+
 async function server(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   try {
     if (url.pathname.startsWith('/api/')) return await api(req, res, url.pathname);
+
     const requested = url.pathname === '/' ? '/index.html' : url.pathname;
     const file = normalize(join(root, requested));
     if (!file.startsWith(root)) return json(res, 403, { error: 'Forbidden' });
+
     const content = await readFile(file);
     res.writeHead(200, { 'content-type': mime[extname(file)] || 'application/octet-stream' });
     res.end(content);
-  } catch { json(res, 404, { error: 'Not found' }); }
+  } catch {
+    json(res, 404, { error: 'Not found' });
+  }
 }
 
-http.createServer(server).listen(port, () => console.log(`MikroTik AI Manager listening on http://localhost:${port}`));
+http.createServer(server).listen(port, '0.0.0.0', () => {
+  console.log(`MikroTik AI Manager listening on http://0.0.0.0:${port}`);
+});

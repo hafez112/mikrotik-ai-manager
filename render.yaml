@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: mikrotik-ai-manager
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MIKROTIK_URL
+        sync: false
+      - key: MIKROTIK_USER
+        sync: false
+      - key: MIKROTIK_PASSWORD
+        sync: false
