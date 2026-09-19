@@ -1,0 +1,18 @@
+{
+  "name": "MikroTik AI Manager",
+  "short_name": "MikroTik AI",
+  "description": "لوحة تحكم ذكية لإدارة MikroTik ومراقبة الشبكات باستخدام الذكاء الاصطناعي",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#07111d",
+  "theme_color": "#0b1020",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1020'/%3E%3Cpath d='M13 42V22h8l9 13 9-13h8v20h-6V31l-11 15-11-15v11h-6z' fill='%2307d6c1'/%3E%3C/svg%3E",
+      "sizes": "64x64",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
