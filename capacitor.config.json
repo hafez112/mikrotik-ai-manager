@@ -1,0 +1,15 @@
+{
+  "appId": "com.hafez112.mikrotikai",
+  "appName": "MikroTik AI Manager",
+  "webDir": ".",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#07111d",
+      "showSpinner": false
+    }
+  }
+}
