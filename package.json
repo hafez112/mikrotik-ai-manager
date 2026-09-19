@@ -1,9 +1,9 @@
 {
   "name": "mikrotik-ai-manager",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
-  "description": "MikroTik AI Manager: Android PWA shell, Node.js API, and SQLite persistence",
+  "description": "Professional Arabic Android interface for MikroTik AI Manager",
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
@@ -11,15 +11,14 @@
     "android:open": "npx cap open android",
     "android:build": "npm run android:sync && cd android && ./gradlew assembleDebug"
   },
-  "engines": {
-    "node": ">=20"
-  },
+  "engines": { "node": ">=20" },
   "dependencies": {
     "@capacitor/android": "^7.4.0",
     "@capacitor/core": "^7.4.0",
+    "@capacitor/haptics": "^7.0.0",
+    "@capacitor/keyboard": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
     "better-sqlite3": "^12.4.1"
   },
-  "devDependencies": {
-    "@capacitor/cli": "^7.4.0"
-  }
+  "devDependencies": { "@capacitor/cli": "^7.4.0" }
 }
