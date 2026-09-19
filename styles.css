@@ -1,286 +1,35 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0b1020" />
-    <meta
-      name="description"
-      content="لوحة تحكم ذكية لإدارة MikroTik ومراقبة الشبكات عبر ذكاء اصطناعي"
-    />
-    <title>MikroTik AI Manager</title>
-    <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1020'/%3E%3Cpath d='M13 42V22h8l9 13 9-13h8v20h-6V31l-11 15-11-15v11h-6z' fill='%2307d6c1'/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand">
-          <div class="brand-mark">M</div>
-          <div>
-            <p class="eyebrow">AI Network Suite</p>
-            <h1>MikroTik AI</h1>
-          </div>
-        </div>
+const CACHE_NAME = 'mikrotik-ai-v1';
+const ASSETS = ['./', './index.html', './styles.css', './app.js', './manifest.webmanifest'];
 
-        <nav class="nav">
-          <button class="nav-item active">
-            <span>الرئيسية</span>
-            <i>⌂</i>
-          </button>
-          <button class="nav-item">
-            <span>الأجهزة</span>
-            <i>◧</i>
-          </button>
-          <button class="nav-item">
-            <span>الشبكات</span>
-            <i>⎈</i>
-          </button>
-          <button class="nav-item">
-            <span>الأمان</span>
-            <i>🛡</i>
-          </button>
-          <button class="nav-item">
-            <span>التقارير</span>
-            <i>◫</i>
-          </button>
-          <button class="nav-item">
-            <span>الذكاء الاصطناعي</span>
-            <i>✦</i>
-          </button>
-        </nav>
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+  );
+  self.skipWaiting();
+});
 
-        <div class="sidebar-card status-card">
-          <div class="card-head">
-            <span>حالة النظام</span>
-            <span class="pill online">عادي</span>
-          </div>
-          <div class="metric-block">
-            <strong>99.94%</strong>
-            <small>توافر الشبكة</small>
-          </div>
-          <div class="bars">
-            <span style="--h: 50%"></span>
-            <span style="--h: 68%"></span>
-            <span style="--h: 84%"></span>
-            <span style="--h: 92%"></span>
-            <span style="--h: 60%"></span>
-            <span style="--h: 78%"></span>
-            <span style="--h: 100%"></span>
-          </div>
-        </div>
-      </aside>
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      )
+    )
+  );
+  self.clients.claim();
+});
 
-      <main class="main-panel">
-        <header class="topbar">
-          <div>
-            <p class="eyebrow muted">لوحة التحكم</p>
-            <h2>نظرة عامة على البنية</h2>
-          </div>
-          <div class="topbar-actions">
-            <button id="installBtn" class="secondary-btn">تثبيت التطبيق</button>
-            <div class="user-pill">
-              <span class="avatar">ح</span>
-              <div>
-                <strong>حافظ</strong>
-                <small>مدير الشبكة</small>
-              </div>
-            </div>
-          </div>
-        </header>
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
 
-        <section class="summary-grid">
-          <article class="stat-card accent">
-            <div class="stat-head">
-              <span>إجمالي الأجهزة</span>
-              <i>◈</i>
-            </div>
-            <strong>24</strong>
-            <small>+3 هذا الأسبوع</small>
-          </article>
-
-          <article class="stat-card success">
-            <div class="stat-head">
-              <span>حركة البيانات</span>
-              <i>↗</i>
-            </div>
-            <strong>1.7 Gbps</strong>
-            <small>+14.2% مقارنة بالأمس</small>
-          </article>
-
-          <article class="stat-card warning">
-            <div class="stat-head">
-              <span>التنبيهات</span>
-              <i>⚠</i>
-            </div>
-            <strong>07</strong>
-            <small>3 حرجة، 4 متوسطة</small>
-          </article>
-
-          <article class="stat-card info">
-            <div class="stat-head">
-              <span>الذكاء الاصطناعي</span>
-              <i>✦</i>
-            </div>
-            <strong>96%</strong>
-            <small>توقع الاستقرار</small>
-          </article>
-        </section>
-
-        <section class="content-grid">
-          <div class="panel span-2">
-            <div class="panel-head">
-              <div>
-                <p class="eyebrow muted">مؤشرات الأداء</p>
-                <h3>مخطط حركة الشبكة</h3>
-              </div>
-              <button class="ghost-btn">تصدير</button>
-            </div>
-            <div class="chart-wrap">
-              <div class="chart-grid"></div>
-              <svg viewBox="0 0 600 220" preserveAspectRatio="none" aria-label="مخطط شبكة">
-                <path
-                  d="M0 180 C60 162, 90 145, 130 150 S210 175, 260 140 S355 75, 420 95 S510 60, 600 28 L600 220 L0 220 Z"
-                  fill="url(#bgFill)"
-                />
-                <path
-                  d="M0 180 C60 162, 90 145, 130 150 S210 175, 260 140 S355 75, 420 95 S510 60, 600 28"
-                  fill="none"
-                  stroke="#38f2d1"
-                  stroke-width="4"
-                  stroke-linecap="round"
-                />
-                <defs>
-                  <linearGradient id="bgFill" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stop-color="#38f2d1" stop-opacity="0.45" />
-                    <stop offset="100%" stop-color="#38f2d1" stop-opacity="0.05" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-            <div class="chart-labels">
-              <span>يناير</span>
-              <span>فبراير</span>
-              <span>مارس</span>
-              <span>أبريل</span>
-              <span>مايو</span>
-              <span>يونيو</span>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-head compact">
-              <div>
-                <p class="eyebrow muted">مهمة AI</p>
-                <h3>تحليل حيوي</h3>
-              </div>
-            </div>
-            <div class="insight-box">
-              <div class="bubble green">
-                <span>✔</span>
-                <div>
-                  <strong>حالة مستقرة</strong>
-                  <small>لا توجد تذبذبات غير طبيعية</small>
-                </div>
-              </div>
-              <div class="bubble blue">
-                <span>✦</span>
-                <div>
-                  <strong>توقع ذكي</strong>
-                  <small>رفع التحميل المتوقع خلال 3 ساعات</small>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel span-2">
-            <div class="panel-head compact">
-              <div>
-                <p class="eyebrow muted">أجهزة الشبكة</p>
-                <h3>المضيفات النشطة</h3>
-              </div>
-              <button class="ghost-btn">إدارة</button>
-            </div>
-            <div class="device-list">
-              <div class="device-row">
-                <div class="device-info">
-                  <span class="dot online"></span>
-                  <div>
-                    <strong>Core Router 01</strong>
-                    <small>192.168.88.1</small>
-                  </div>
-                </div>
-                <span class="tag healthy">مستقر</span>
-              </div>
-              <div class="device-row">
-                <div class="device-info">
-                  <span class="dot online"></span>
-                  <div>
-                    <strong>Access Point HQ</strong>
-                    <small>192.168.88.10</small>
-                  </div>
-                </div>
-                <span class="tag healthy">مستقر</span>
-              </div>
-              <div class="device-row">
-                <div class="device-info">
-                  <span class="dot warning"></span>
-                  <div>
-                    <strong>Firewall Edge</strong>
-                    <small>192.168.88.20</small>
-                  </div>
-                </div>
-                <span class="tag warn">تنبيه</span>
-              </div>
-              <div class="device-row">
-                <div class="device-info">
-                  <span class="dot offline"></span>
-                  <div>
-                    <strong>Backup Router</strong>
-                    <small>192.168.88.30</small>
-                  </div>
-                </div>
-                <span class="tag off">غير متصل</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-head compact">
-              <div>
-                <p class="eyebrow muted">الأحداث الأخيرة</p>
-                <h3>سجل النشاط</h3>
-              </div>
-            </div>
-            <ul class="event-list">
-              <li>
-                <span class="event-time">08:40</span>
-                <div>
-                  <strong>تمت إعادة تشغيل DHCP</strong>
-                  <small>إعادة توزيع عناوين IP</small>
-                </div>
-              </li>
-              <li>
-                <span class="event-time">09:15</span>
-                <div>
-                  <strong>تم اكتشاف حركة غير عادية</strong>
-                  <small>تم حظر المصدر 10.0.0.19</small>
-                </div>
-              </li>
-              <li>
-                <span class="event-time">10:05</span>
-                <div>
-                  <strong>تمت إضافة قاعدة NAT</strong>
-                  <small>تحديث سياسة الوصول</small>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </section>
-      </main>
-    </div>
-
-    <script src="app.js"></script>
-  </body>
-</html>
+      return fetch(event.request).then((response) => {
+        if (event.request.method !== 'GET') return response;
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      });
+    })
+  );
+});

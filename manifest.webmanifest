@@ -1,35 +1,24 @@
-const installButton = document.getElementById('installBtn');
+# Logs
+logs/
+*.log
+npm-debug.log*
 
-let deferredPrompt = null;
+# Dependency directories
+node_modules/
 
-window.addEventListener('beforeinstallprompt', (event) => {
-  event.preventDefault();
-  deferredPrompt = event;
-  installButton.style.display = 'inline-flex';
-});
+# Build output
+dist/
+build/
 
-installButton?.addEventListener('click', async () => {
-  if (!deferredPrompt) {
-    installButton.textContent = 'التطبيق مثبت بالفعل';
-    return;
-  }
+# Environment files
+.env
+.env.*
 
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  installButton.style.display = 'none';
-});
+# OS files
+.DS_Store
+Thumbs.db
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch((error) => {
-      console.error('Service worker registration failed:', error);
-    });
-  });
-}
-
-const currentDate = new Date();
-const currentMonth = currentDate.toLocaleDateString('ar-SA', { month: 'long' });
-const summaryText = `تحديث الشبكة: ${currentMonth} ${currentDate.getFullYear()}`;
-
-document.title = `MikroTik AI Manager | ${summaryText}`;
+# Editor files
+.vscode/
+.idea/
+*.swp

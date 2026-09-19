@@ -1,6 +1,6 @@
 :root {
   --bg: #07111d;
-  --panel: rgba(13, 22, 35, 0.9);
+  --panel: rgba(13, 22, 35, 0.8);
   --panel-soft: rgba(18, 28, 44, 0.9);
   --panel-alt: rgba(23, 34, 54, 0.8);
   --line: rgba(147, 178, 214, 0.18);
@@ -33,8 +33,13 @@ body {
   color: var(--text);
 }
 
-button {
+button,
+input {
   font: inherit;
+}
+
+button {
+  cursor: pointer;
 }
 
 .app-shell {
@@ -118,7 +123,6 @@ button {
   justify-content: space-between;
   padding: 14px 14px;
   border-radius: 14px;
-  cursor: pointer;
   transition: 0.2s ease;
 }
 
@@ -140,18 +144,32 @@ button {
 
 .card-head,
 .panel-head,
-.stat-head {
+.stat-head,
+.page-header,
+.topbar,
+.table-toolbar,
+.chat-header,
+.composer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
-.pill {
-  padding: 6px 10px;
+.pill,
+.chip,
+.status-badge,
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
   font-size: 0.7rem;
   font-weight: 700;
+}
+
+.pill {
+  padding: 6px 10px;
 }
 
 .pill.online {
@@ -196,17 +214,28 @@ button {
 }
 
 .topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
   margin-bottom: 22px;
   padding: 8px 10px;
 }
 
-.topbar h2 {
-  margin: 6px 0 0;
-  font-size: clamp(1.5rem, 2vw, 2.3rem);
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 260px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: var(--muted);
+}
+
+.search-box input {
+  background: transparent;
+  border: none;
+  width: 100%;
+  color: var(--text);
+  outline: none;
 }
 
 .topbar-actions {
@@ -216,17 +245,24 @@ button {
 }
 
 .secondary-btn,
-.ghost-btn {
+.ghost-btn,
+.quick-btn,
+.mini-actions button,
+.pill-btn {
   border: 1px solid rgba(124, 167, 255, 0.25);
   background: rgba(124, 167, 255, 0.08);
   color: var(--text);
   border-radius: 12px;
   padding: 11px 16px;
-  cursor: pointer;
 }
 
 .ghost-btn {
   background: transparent;
+}
+
+.small {
+  padding: 8px 12px;
+  font-size: 0.8rem;
 }
 
 .user-pill {
@@ -250,6 +286,12 @@ button {
   color: #06131d;
 }
 
+.avatar.tiny {
+  width: 26px;
+  height: 26px;
+  font-size: 0.62rem;
+}
+
 .user-pill strong,
 .user-pill small {
   display: block;
@@ -257,6 +299,48 @@ button {
 
 .user-pill small {
   color: var(--muted);
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+.page-header {
+  margin: 8px 0 18px;
+}
+
+.page-header h2 {
+  margin: 8px 0 0;
+  font-size: clamp(1.6rem, 2vw, 2.3rem);
+}
+
+.chip-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 8px 12px;
+}
+
+.chip.success {
+  background: rgba(102, 230, 166, 0.1);
+  color: var(--success);
+}
+
+.chip.warning {
+  background: rgba(255, 191, 105, 0.1);
+  color: var(--warning);
+}
+
+.chip.neutral {
+  background: rgba(124, 167, 255, 0.1);
+  color: var(--accent);
 }
 
 .summary-grid {
@@ -304,7 +388,8 @@ button {
   margin-bottom: 16px;
 }
 
-.panel-head h3 {
+.panel-head h3,
+.panel h3 {
   margin: 6px 0 0;
   font-size: 1.15rem;
 }
@@ -395,7 +480,9 @@ button {
 }
 
 .device-list,
-.event-list {
+.event-list,
+.net-list,
+.policy-list {
   display: grid;
   gap: 12px;
   margin: 0;
@@ -404,7 +491,9 @@ button {
 }
 
 .device-row,
-.event-list li {
+.event-list li,
+.net-list li,
+.policy-list li {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -422,12 +511,16 @@ button {
 }
 
 .device-info strong,
-.event-list strong {
+.event-list strong,
+.net-list strong,
+.policy-list strong {
   display: block;
 }
 
 .device-info small,
-.event-list small {
+.event-list small,
+.net-list span,
+.policy-list span {
   color: var(--muted);
 }
 
@@ -481,12 +574,200 @@ button {
   padding-top: 3px;
 }
 
+.table-panel {
+  overflow: hidden;
+}
+
+.table-toolbar {
+  margin-bottom: 14px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pill-btn {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 8px 14px;
+}
+
+.pill-btn.active {
+  background: rgba(44, 230, 193, 0.12);
+  color: var(--primary);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: right;
+}
+
+th,
+td {
+  padding: 16px 12px;
+  border-bottom: 1px solid rgba(147, 178, 214, 0.08);
+}
+
+thead th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+tbody td {
+  color: var(--text);
+}
+
+.network-grid,
+.security-grid,
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.feature-panel {
+  grid-column: span 1;
+}
+
+.mini-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.mini-actions button,
+.quick-btn {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--line);
+  width: 100%;
+  padding: 12px 10px;
+}
+
+.danger-list strong {
+  color: #ffd1d8;
+}
+
+.report-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.stat-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mini-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.stat-panel strong {
+  font-size: 2rem;
+}
+
+.stat-panel small {
+  color: var(--muted);
+}
+
+.assistant-layout {
+  display: grid;
+  grid-template-columns: 2.1fr 0.9fr;
+  gap: 18px;
+}
+
+.chat-panel {
+  padding-bottom: 12px;
+}
+
+.chat-header {
+  margin-bottom: 18px;
+}
+
+.status-badge {
+  background: rgba(102, 230, 166, 0.12);
+  color: var(--success);
+  padding: 7px 10px;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 260px;
+}
+
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 82%;
+}
+
+.message p {
+  margin: 0;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(147, 178, 214, 0.1);
+  padding: 12px 14px;
+  border-radius: 14px;
+  line-height: 1.6;
+}
+
+.message.user-msg {
+  align-self: flex-end;
+}
+
+.message.user-msg p {
+  background: rgba(44, 230, 193, 0.08);
+  border-color: rgba(44, 230, 193, 0.2);
+}
+
+.composer {
+  margin-top: 18px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.composer input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  outline: none;
+  padding: 10px 2px;
+}
+
+.composer button {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #04151d;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 700;
+}
+
+.quick-actions {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
 @media (max-width: 1100px) {
   .summary-grid {
     grid-template-columns: repeat(2, minmax(190px, 1fr));
   }
 
-  .content-grid {
+  .content-grid,
+  .network-grid,
+  .security-grid,
+  .report-grid,
+  .assistant-layout {
     grid-template-columns: 1fr;
   }
 
@@ -509,7 +790,12 @@ button {
     padding: 0;
   }
 
-  .topbar {
+  .topbar,
+  .page-header,
+  .topbar-actions,
+  .table-toolbar,
+  .chat-header,
+  .composer {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -520,6 +806,15 @@ button {
   }
 
   .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-box {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .mini-actions {
     grid-template-columns: 1fr;
   }
 }
