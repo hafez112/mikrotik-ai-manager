@@ -1,25 +1,45 @@
-async function analyzeQuestion(question = '') {
-  const text = String(question).trim();
-  if (!text) return 'يرجى كتابة سؤال أو طلب صريح لتقييم الشبكة.';
-  const normalized = text.toLowerCase();
+const $ = (selector) => document.querySelector(selector);
+const navItems = document.querySelectorAll('.nav-item');
+const views = document.querySelectorAll('.view');
+const storedApi = localStorage.getItem('apiBaseUrl') || document.querySelector('meta[name="api-base-url"]')?.content || '';
+const apiBase = () => (localStorage.getItem('apiBaseUrl') || storedApi).replace(/\/$/, '');
+const token = () => localStorage.getItem('token') || '';
 
-  if (normalized.includes('حمل') || normalized.includes('تحميل') || normalized.includes('حركة') || normalized.includes('traffic')) {
-    return 'لا توجد مؤشرات على حمل غير طبيعي حاليًا، لكن استخدام VLAN-Office قد يرتفع بنسبة 15% خلال الساعات الثلاث القادمة؛ يُنصح بمراجعة QoS قبل ذلك.';
-  }
+function setView(id) { navItems.forEach((b) => b.classList.toggle('active', b.dataset.target === id)); views.forEach((v) => v.classList.toggle('active', v.id === id)); }
+navItems.forEach((button) => button.addEventListener('click', () => setView(button.dataset.target)));
 
-  if (normalized.includes('أمان') || normalized.includes('firewall') || normalized.includes('حظر') || normalized.includes('security')) {
-    return 'وضع الحماية جيد نسبيًا، لكن هناك 3 عناوين محظورة récemment في السجل، ويُنصح بمراجعة قاعدة Firewall 304 وتحديث قائمة الحظر.';
-  }
-
-  if (normalized.includes('vpn') || normalized.includes('الفرع') || normalized.includes('branch')) {
-    return 'توجد اتصال VPN إلى فرع الشمال مستقر، مع زمن تأخير 18ms وفقد إشارة 0.4% فقط، ولا توجد مؤشرات للانقطاع.';
-  }
-
-  if (normalized.includes('qos') || normalized.includes('جودة') || normalized.includes('سرعة') || normalized.includes('السرعة')) {
-    return 'يُنصح بتخصيص 35% من النطاق للخدمات الصوتية و25% للاتصالات الداخلية، مع إعطاء الأولوية لتطبيقات VoIP والاتصال الإداري.';
-  }
-
-  return 'بنية الشبكة مستقرة حاليًا، وا��مستوى التالي لتحسين الاستقرار هو ضبط QoS، ومراجعة FireWall، ومراقبة الحمل المتوقع في VLAN-Office.';
+async function api(path, options = {}) {
+  const headers = { ...(options.body ? { 'content-type': 'application/json' } : {}), ...(token() ? { authorization: `Bearer ${token()}` } : {}), ...(options.headers || {}) };
+  const response = await fetch(`${apiBase()}${path}`, { ...options, headers });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+  return data;
 }
 
-export { analyzeQuestion };
+async function login() {
+  if (token()) return;
+  const data = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ username: 'admin', password: 'admin123' }) });
+  if (data.token) localStorage.setItem('token', data.token);
+}
+
+async function loadData() {
+  try {
+    const health = await api('/api/health');
+    $('#apiStatus').textContent = health.mode === 'routeros' ? 'RouterOS' : 'تجريبي';
+    $('#apiStatus').className = `chip ${health.mode === 'routeros' ? 'success' : 'warning'}`;
+    $('#cpuValue').textContent = `${health.cpuLoad ?? '—'}%`;
+    const devices = (await api('/api/devices')).data || [];
+    $('#deviceCount').textContent = devices.length;
+    $('#deviceList').innerHTML = devices.map((d) => `<li>🟢 ${escapeHtml(d.name)} <span>${escapeHtml(d.ip)}</span></li>`).join('');
+    $('#devicesTable').innerHTML = devices.map((d) => `<tr><td>${escapeHtml(d.name)}</td><td>${escapeHtml(d.type)}</td><td>${escapeHtml(d.ip)}</td><td>${escapeHtml(d.status)}</td><td>${d.cpu ?? '—'}%</td></tr>`).join('');
+    const network = (await api('/api/network')).data;
+    $('#networkCards').innerHTML = network.segments.map((n) => `<article><small>${escapeHtml(n.name)}</small><strong>${escapeHtml(n.subnet)}</strong></article>`).join('');
+  } catch (error) { $('#apiStatus').textContent = 'غير متصل'; $('#apiStatus').className = 'chip warning'; console.error(error); }
+}
+function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[c])); }
+function addMessage(text, type) { const node = document.createElement('div'); node.className = `message ${type}`; node.textContent = text; $('#messages').appendChild(node); node.scrollIntoView({ behavior: 'smooth' }); }
+async function askAI() { const input = $('#prompt'); const question = input.value.trim(); if (!question) return; addMessage(question, 'user'); input.value = ''; try { const data = await api('/api/ai/analyze', { method: 'POST', body: JSON.stringify({ question }) }); addMessage(data.answer, 'ai'); } catch (e) { addMessage(e.message, 'ai'); } }
+$('#send')?.addEventListener('click', askAI); $('#prompt')?.addEventListener('keydown', (e) => e.key === 'Enter' && askAI()); $('#refreshBtn')?.addEventListener('click', loadData); $('#loadDevicesBtn')?.addEventListener('click', loadData); $('#addDeviceBtn')?.addEventListener('click', () => alert('أضف الجهاز عبر API: POST /api/devices'));
+$('#saveApi')?.addEventListener('click', () => { const value = $('#apiUrl').value.trim().replace(/\/$/, ''); localStorage.setItem('apiBaseUrl', value); $('#settingsMessage').textContent = 'تم الحفظ. أعد تحميل التطبيق لاختبار الاتصال.'; });
+$('#apiUrl').value = apiBase();
+login().then(loadData).catch(loadData);

@@ -1,28 +1,7 @@
-import crypto from 'node:crypto';
-
-const SECRET = process.env.JWT_SECRET || 'mikrotik-ai-demo-secret';
-
-function createToken(payload) {
-  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
-  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const sig = crypto.createHmac('sha256', SECRET).update(`${header}.${body}`).digest('base64url');
-  return `${header}.${body}.${sig}`;
-}
-
-function verifyToken(token) {
-  if (!token) return null;
-  const parts = token.split('.');
-  if (parts.length !== 3) return null;
-  const [header, body, signature] = parts;
-  const expected = crypto.createHmac('sha256', SECRET).update(`${header}.${body}`).digest('base64url');
-  if (crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
-    try {
-      return JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
-export { createToken, verifyToken };
+const demoDevices=[{name:'Core Router 01',ip:'192.168.88.1',type:'RouterOS',status:'online',cpu:28},{name:'Access Point HQ',ip:'192.168.88.10',type:'Wireless',status:'online',cpu:42}];
+async function request(path){const url=process.env.MIKROTIK_URL; if(!url||!process.env.MIKROTIK_USER||!process.env.MIKROTIK_PASSWORD)return null; const response=await fetch(`${url.replace(/\/$/,'')}/rest${path}`,{headers:{authorization:`Basic ${Buffer.from(`${process.env.MIKROTIK_USER}:${process.env.MIKROTIK_PASSWORD}`).toString('base64')},accept:'application/json'},signal:AbortSignal.timeout(7000)}); if(!response.ok)throw new Error(`RouterOS ${response.status}`); return response.json();}
+async function getSystemResource(){try{return await request('/system/resource')||{'cpu-load':0,version:'RouterOS demo',uptime:'demo'};}catch{return {'cpu-load':0,version:'RouterOS unavailable',uptime:'offline'};}}
+async function getRouterStatus(){try{const data=await request('/system/resource');return {devices:demoDevices,source:data?'routeros':'demo'};}catch{return {devices:demoDevices,source:'demo'};}}
+async function buildNetworkSummary(){return {segments:[{name:'LAN-Office',subnet:'10.10.10.0/24'},{name:'LAN-Guest',subnet:'10.10.20.0/24'},{name:'VLAN-Admin',subnet:'10.10.30.0/24'}],mode:process.env.MIKROTIK_URL?'routeros':'demo'};}
+async function buildSecuritySummary(){return {rules:[{id:'RULE 101',action:'منع الوصول غير المصرح'},{id:'RULE 202',action:'حظر محاولات Ping'}],blocked:[]};}
+export {getSystemResource,getRouterStatus,buildNetworkSummary,buildSecuritySummary};

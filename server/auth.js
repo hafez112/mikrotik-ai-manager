@@ -1,44 +1,5 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const root = fileURLToPath(new URL('..', import.meta.url));
-const storeDir = join(root, 'data');
-const storeFile = join(storeDir, 'store.json');
-
-const defaultState = {
-  users: [
-    {
-      id: 'admin',
-      username: 'admin',
-      name: 'مدير النظام',
-      role: 'admin',
-      passwordHash: 'admin123'
-    }
-  ],
-  settings: {
-    routerUrl: process.env.MIKROTIK_URL || '',
-    routerUser: process.env.MIKROTIK_USER || '',
-    routerPassword: process.env.MIKROTIK_PASSWORD || ''
-  }
-};
-
-async function initStore() {
-  await mkdir(storeDir, { recursive: true });
-  try {
-    await readFile(storeFile, 'utf8');
-  } catch {
-    await writeFile(storeFile, JSON.stringify(defaultState, null, 2), 'utf8');
-  }
-}
-
-async function readStore() {
-  const raw = await readFile(storeFile, 'utf8');
-  return JSON.parse(raw || '{}');
-}
-
-async function saveStore(state) {
-  await writeFile(storeFile, JSON.stringify(state, null, 2), 'utf8');
-}
-
-export { initStore, readStore, saveStore, defaultState };
+import crypto from 'node:crypto';
+const SECRET = process.env.JWT_SECRET || 'change-me-in-production';
+function createToken(payload) { const header=Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'); const body=Buffer.from(JSON.stringify({...payload,exp:Date.now()+86400000})).toString('base64url'); const sig=crypto.createHmac('sha256',SECRET).update(`${header}.${body}`).digest('base64url'); return `${header}.${body}.${sig}`; }
+function verifyToken(token) { try { const [h,b,s]=String(token).split('.'); if(!h||!b||!s) return null; const expected=crypto.createHmac('sha256',SECRET).update(`${h}.${b}`).digest('base64url'); if(s.length!==expected.length||!crypto.timingSafeEqual(Buffer.from(s),Buffer.from(expected))) return null; const data=JSON.parse(Buffer.from(b,'base64url')); return data.exp>Date.now()?data:null; } catch { return null; } }
+export {createToken,verifyToken};

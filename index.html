@@ -1,93 +1,32 @@
-const navItems = document.querySelectorAll('.nav-item');
-const views = document.querySelectorAll('.view');
-const apiStatus = document.getElementById('apiStatus');
-const prompt = document.getElementById('prompt');
-const send = document.getElementById('send');
-const messages = document.getElementById('messages');
-
-function setView(targetId) {
-  navItems.forEach((button) => button.classList.toggle('active', button.dataset.target === targetId));
-  views.forEach((view) => view.classList.toggle('active', view.id === targetId));
-}
-
-navItems.forEach((button) => {
-  button.addEventListener('click', () => setView(button.dataset.target));
-});
-
-async function autoLogin() {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'admin123' })
-    });
-    const data = await response.json();
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-      apiStatus.textContent = 'متصل';
-      apiStatus.className = 'chip success';
-    }
-    return;
-  }
-
-  try {
-    const response = await fetch('/api/auth/me', {
-      headers: { authorization: `Bearer ${token}` }
-    });
-    if (response.ok) {
-      apiStatus.textContent = 'متصل';
-      apiStatus.className = 'chip success';
-    }
-  } catch {
-    localStorage.removeItem('token');
-  }
-}
-
-async function loadHealth() {
-  try {
-    const response = await fetch('/api/health');
-    const health = await response.json();
-    apiStatus.textContent = health.mode === 'routeros' ? 'RouterOS متصل' : 'الوضع التجريبي';
-    apiStatus.className = `chip ${health.mode === 'routeros' ? 'success' : 'warning'}`;
-  } catch {
-    apiStatus.textContent = 'غير متصل';
-    apiStatus.className = 'chip warning';
-  }
-}
-
-function addMessage(text, type = 'ai') {
-  const div = document.createElement('div');
-  div.className = `message ${type}`;
-  div.textContent = text;
-  messages.appendChild(div);
-  messages.scrollTop = messages.scrollHeight;
-}
-
-async function askAI() {
-  const question = prompt.value.trim();
-  if (!question) return;
-  addMessage(question, 'user');
-  prompt.value = '';
-
-  const token = localStorage.getItem('token');
-  const response = await fetch('/api/ai/analyze', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      ...(token ? { authorization: `Bearer ${token}` } : {})
-    },
-    body: JSON.stringify({ question })
-  });
-
-  const data = await response.json();
-  addMessage(data.answer || data.error || 'تعذر تحليل السؤال', 'ai');
-}
-
-send?.addEventListener('click', askAI);
-prompt?.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') askAI();
-});
-
-autoLogin();
-loadHealth();
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07111d"><meta name="api-base-url" content="">
+  <title>MikroTik AI Manager</title>
+  <link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><b>M</b><div><small>AI NETWORK SUITE</small><h1>MikroTik AI</h1></div></div>
+    <nav>
+      <button class="nav-item active" data-target="overview">الرئيسية <i>⌂</i></button>
+      <button class="nav-item" data-target="devices">الأجهزة <i>◧</i></button>
+      <button class="nav-item" data-target="network">الشبكات <i>⎈</i></button>
+      <button class="nav-item" data-target="security">الأمان <i>🛡</i></button>
+      <button class="nav-item" data-target="ai">المساعد الذكي <i>✦</i></button>
+      <button class="nav-item" data-target="settings">الإعدادات <i>⚙</i></button>
+    </nav>
+    <div class="panel status"><div>حالة الاتصال <span id="apiStatus" class="chip neutral">جاري الفحص</span></div><strong id="cpuValue">—</strong><small>استخدام المعالج</small></div>
+  </aside>
+  <main>
+    <header class="topbar"><div><small>لوحة التحكم</small><h2>إدارة البنية التحتية بذكاء</h2></div><button id="refreshBtn" class="button">تحديث البيانات</button></header>
+    <section id="overview" class="view active"><div class="cards"><article><small>الأجهزة</small><strong id="deviceCount">—</strong><span>الأجهزة المسجلة</span></article><article><small>حركة البيانات</small><strong>1.7 Gbps</strong><span>قراءة حالية</span></article><article><small>التنبيهات</small><strong>07</strong><span>تحتاج مراجعة</span></article><article><small>توقع AI</small><strong>96%</strong><span>استقرار متوقع</span></article></div><div class="grid"><div class="panel wide"><small>مؤشرات الأداء</small><h3>حركة الشبكة</h3><div class="chart"><svg viewBox="0 0 600 180" preserveAspectRatio="none"><path d="M0 150 C80 100 130 150 210 110 S340 60 410 100 S510 50 600 25 L600 180 L0 180Z" fill="#2ce6c122"/><path d="M0 150 C80 100 130 150 210 110 S340 60 410 100 S510 50 600 25" fill="none" stroke="#2ce6c1" stroke-width="4"/></svg></div></div><div class="panel"><small>تحليل AI</small><h3>الحالة مستقرة</h3><p>راقب CPU وحركة VLAN قبل تطبيق أي تغييرات.</p></div><div class="panel wide"><small>المضيفات النشطة</small><h3>أجهزة الشبكة</h3><ul id="deviceList"><li>جاري تحميل الأجهزة...</li></ul></div></div></section>
+    <section id="devices" class="view"><h2>إدارة الأجهزة</h2><div class="panel"><div class="toolbar"><button id="addDeviceBtn" class="button">إضافة جهاز</button><button id="loadDevicesBtn" class="ghost-btn">تحديث</button></div><table><thead><tr><th>الجهاز</th><th>النوع</th><th>IP</th><th>الحالة</th><th>CPU</th></tr></thead><tbody id="devicesTable"><tr><td colspan="5">جاري التحميل...</td></tr></tbody></table></div></section>
+    <section id="network" class="view"><h2>الشبكات وIP Management</h2><div class="cards" id="networkCards"><article><small>جاري التحميل</small></article></div></section>
+    <section id="security" class="view"><h2>الأمان والسياسات</h2><div class="panel"><ul><li>RULE 101 — منع الوصول غير المصرح</li><li>RULE 202 — حظر محاولات Ping</li><li>RULE 304 — منع العناوين المشبوهة</li></ul></div></section>
+    <section id="ai" class="view"><h2>مساعد MikroTik الذكي</h2><div class="panel chat"><div id="messages"><div class="message ai">مرحبًا، اسألني عن أداء الشبكة أو الأم��ن أو QoS.</div></div><div class="composer"><input id="prompt" placeholder="اكتب سؤالك..."><button id="send" class="button">إرسال</button></div></div></section>
+    <section id="settings" class="view"><h2>إعداد اتصال Android</h2><div class="panel settings"><p>ضع رابط API المنشور على Render حتى يتصل تطبيق Android بالخادم.</p><label>رابط API<input id="apiUrl" placeholder="https://your-service.onrender.com"></label><button id="saveApi" class="button">حفظ الاتصال</button><p id="settingsMessage"></p></div></section>
+  </main>
+</div><script src="/app.js"></script></body></html>
